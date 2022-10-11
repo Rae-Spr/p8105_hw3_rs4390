@@ -5,7 +5,108 @@ date: "2022-10-07"
 output: github_document
 ---
 
-```{r setup, include=FALSE}
+```{r setup, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(ggridges)
+library(dplyr)
+```
+
+# Problem 1 
+
+```{r}
+library(p8105.datasets)
+data("instacart")
+```
+
+## Dataset description
+The `instacart` dataset contains `r nrow(instacart)` observations of individual products from Instacart orders. There are `r ncol(instacart)` total variables that detail the order information, product information, and user ID as seen below: 
+
+* `order_id`: order identifier
+* `product_id`: product identifier
+* `add_to_cart_order`: order in which each product was added to cart
+* `reordered`: 1 if this product has been ordered by this user in the past, 0 otherwise
+* `user_id`: customer identifier
+* `eval_set`: which evaluation set this order belongs in 
+* `order_number`: the order sequence number for this user (1=first, n=nth)
+* `order_dow`: the day of the week on which the order was placed
+* `order_hour_of_day`: the hour of the day on which the order was placed
+* `days_since_prior_order`: days since the last order, capped at 30, NA if order_number=1
+* `product_name`: name of the product
+* `aisle_id`: aisle identifier
+* `department_id`: department identifier
+* `aisle`: the name of the aisle
+* `department`: the name of the department
+
+For example, observation #417 (row 417 in `instacart`) details the ordering of red peppers, which were found in the fresh vegetables `aisle` in the produce `department`. This product was added to the cart 16th (out of 17 total items). The order was placed in the 17th hour of the day, and it had been at least 30 days since `user_id` 163023's last order. 
+
+## How many aisles are there, and which aisles are the most items ordered from? 
+```{r, message=FALSE, warning=FALSE}
+aisles_distinct = instacart %>% 
+  distinct(aisle)
+
+most_ordered = instacart %>% 
+  group_by(aisle, aisle_id) %>% 
+  summarize(n_obs = n())
+  
+```
+
+There are 134 aisles. The fresh vegetables aisle (aisle_id 83) and fresh fruits aisle (aisle_id 24) have the most items ordered with n being > 150000 each. 
+
+## Making a plot for items ordered 
+```{r, message=FALSE, warning=FALSE}
+grouped = instacart %>% 
+  group_by(aisle) %>% 
+  summarize(aisle_count = n()) %>% 
+  filter(aisle_count > 10000)
+
+  ggplot(grouped, aes(x = (reorder(aisle, aisle_count)), y = aisle_count)) +
+    geom_bar(stat = "identity") + 
+      labs(
+    x = "Aisle",
+    y = "Number of Items Purchased",
+    title = "Barplot of the most popular Instacart aisles") + 
+    viridis::scale_color_viridis(
+    name = "Aisle", 
+    discrete = TRUE) + 
+    coord_flip()
+```
+
+## Table for most popular items in three aisles 
+
+```{r, message=FALSE, warning=FALSE}
+three_aisles = instacart %>% 
+  group_by(aisle, product_name) %>% 
+  summarize(aisle_count = n()) %>% 
+  filter(aisle == 'baking ingredients' | aisle == 'dog food care' | aisle == 'packaged vegetables fruits') %>% 
+  arrange(desc(aisle_count)) %>% 
+  slice(1:3) 
+
+three_aisles
+```
+
+## Mean hour of day
+
+```{r, message=FALSE, warning=FALSE}
+mean_hour = instacart %>% 
+  group_by(product_name, order_dow, order_hour_of_day) %>% 
+  mutate(order_dow = recode(order_dow, `0` = "Sun", `1` = "Mon", `2` = "Tue", `3` = "Wed", `4` = "Thu", `5` = "Fri", `6` = "Sat")) %>% 
+  filter(product_name == 'Pink Lady Apples' | product_name == 'Coffee Ice Cream') %>% 
+  select(product_name, order_dow, order_hour_of_day) %>% 
+  group_by(product_name, order_dow) %>% 
+  summarize(mean_hour_of_day = mean(order_hour_of_day, na.rm = TRUE)) %>% 
+  pivot_wider(
+    names_from = 'order_dow',
+    values_from = 'mean_hour_of_day'
+  ) %>% 
+  select('Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat')
+
+mean_hour
+  
+```
+
+# Problem 2 
+
+```{r}
 
 ```
 
