@@ -106,7 +106,62 @@ mean_hour
 
 # Problem 2 
 
-```{r}
-
+```{r, message = FALSE, warning = FALSE}
+accel_data = read_csv('data/accel_data.csv') %>% 
+  janitor:: clean_names() %>% 
+  pivot_longer(
+    activity_1:activity_1440, 
+    names_to = 'minutes', 
+    values_to = 'count', 
+    names_prefix = 'activity_') %>% 
+  mutate(day_type = recode(day, "Monday" = "weekday", "Tuesday" = "weekday", "Wednesday" = "weekday", "Thursday" = "weekday", "Friday" = "weekday", "Saturday" = "weekend", "Sunday" = "weekend")) %>% 
+  mutate(day = factor(day, levels = c("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday")), day_type = factor(day_type)) %>% 
+  mutate_at(c('minutes'), as.numeric)
 ```
 
+## Dataset description 
+
+The accel_data dataset contains `r nrow(accel_data)` observations of activity values over a 24 hour period for the 63 year-old male being measured over 35 days. There are `r ncol(accel_data)` total variables that detail each minute and the `week` it was measured, the `day` of the week, the `day_id` of the study out of 35 days, whether it was a weekday or weekend (`day_type`), and the `count` which is the activity value measured at that minute. The resulting dataset has dimensions described above, which are 50400 rows x 6 columns.
+
+## Total activity for each day 
+
+```{r, message=FALSE, warning = FALSE}
+total_activity = 
+  accel_data %>% 
+  group_by(day) %>% 
+  summarize(total_activity = sum(count))
+
+total_activity
+```
+
+Wednesdays, Thursdays, and Fridays have the highest activity values out of all the days of the week. Saturday has the lowest activity values. 
+
+## Plot of 24 hour activity time on each day 
+
+```{r}
+accel_data %>%  
+  group_by(day, minutes) %>% 
+  ggplot(aes(x = minutes, y = count, color = day)) + 
+  geom_point(alpha=0.3) + 
+  theme(axis.text.x = element_text(angle = 45)) +
+  scale_x_continuous(breaks=seq(from = 0, to = 1440, by = 60)) + 
+  labs(
+    x = "Minute of day",
+    y = "Activity value",
+    title = "Scatterplot of 24 hour activity period by day of week")
+```
+
+As we see in the scatterplot, majority of the activity values (of whatever health data was captured for the patient) over a 24 hour period during the 35 days of observations fall below 2500. There are four distinct peaks where the activity values are higher than normal. The first peak occurs around minute 420,  which is around hour 7 out of 24. This spike in activity is associated with Thursdays, one of the days with higher activity values generally. The second peak occurs between minute 540 and 78, so between 9am and 1pm. These higher values are associated with Fridays and Sundays. The third peak occurs between minute 960 and 1020, so between 4 and 5pm. This peak of higher values is associated with Saturdays and Sundays, interesting because Saturday has the lowest activity values on average. The final peak occurs between minute 1140 and 1320, which is between 7-10pm. These higher activity values are associated mostly with Fridays and Wednesdays. This makes sense because Fridays and Wednesdays have higher activity values generally. 
+
+
+# Problem 3 
+
+```{r}
+library(p8105.datasets)
+data("ny_noaa") 
+
+ny_noaa = ny_noaa %>% 
+  janitor::clean_names()
+```
+ 
+ 
