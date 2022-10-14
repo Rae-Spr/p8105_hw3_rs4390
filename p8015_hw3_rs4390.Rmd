@@ -208,7 +208,11 @@ avg_tmax =
   avg_tmax %>% 
     ggplot(aes(x = year, y = mean_tmax, group = id)) + 
     geom_line(alpha=0.3) + 
-    facet_grid(. ~ month)
+    facet_grid(. ~ month) + 
+    labs(
+    x = "Year",
+    y = "Average Maximum Temp (C)",
+    title = "Lineplot of avg max temperatures in January and July")
 ```
 
 When looking at the lineplots, it is easy to see that July has higher average maximum temperatures than January does between the  years 1981 - 2010. The lineplots for Janurary and July indicate a few outliers on each, with more outliers being at the lower end of the range. Most values are clustered within a certain range of degrees C, with the range being relatively larger for January than for July. 
